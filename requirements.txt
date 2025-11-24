@@ -7,3 +7,6 @@ langchain-community
 langchain-groq
 pydantic
 requests
+transformers
+
+
