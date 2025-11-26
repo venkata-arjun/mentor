@@ -41,7 +41,9 @@ def get_recent_history(session_id: str) -> str:
     """
     Get readable USER/BOT history text for prompting tools.
     """
-    msgs = get_memory(session_id).load_memory_variables({}).get("chat_history", []) or []
+    msgs = (
+        get_memory(session_id).load_memory_variables({}).get("chat_history", []) or []
+    )
     lines = []
     for m in msgs:
         role = "USER" if getattr(m, "type", "") == "human" else "BOT"
@@ -61,6 +63,7 @@ def get_or_create_session(session_id: str) -> Dict[str, Any]:
 # ---------------------------
 # Academic Score Processing
 # ---------------------------
+
 
 def calculate_grade(score: int) -> str:
     """
@@ -168,6 +171,7 @@ def show_marks_table(session_id: str) -> str:
 # Tool Definitions
 # ---------------------------
 
+
 def positive_prompt_tool(text: str, session_id: str):
     """
     Motivational and upbeat responses.
@@ -233,6 +237,7 @@ def clarification_question(_: str, __: str):
 # Agent Setup (fallback generic handling)
 # ---------------------------
 
+
 def get_agent(session_id: str):
     """
     Builds and caches a LangChain agent for generic queries with:
@@ -244,15 +249,37 @@ def get_agent(session_id: str):
 
     memory = get_memory(session_id)
     tools = [
-        Tool("PositiveResponse", lambda t: positive_prompt_tool(t, session_id), "Positive feelings"),
-        Tool("NegativeResponse", lambda t: negative_prompt_tool(t, session_id), "Negative feelings"),
-        Tool("AcademicHelper", lambda t: student_marks_tool(t, session_id), "Scores & results"),
-        Tool("Safety", lambda t: self_harm_safety_tool(t, session_id), "Self-harm emergency"),
-        Tool("ClarifyIntent", lambda t: clarification_question(t, session_id), "Ask if message refers to self"),
+        Tool(
+            "PositiveResponse",
+            lambda t: positive_prompt_tool(t, session_id),
+            "Positive feelings",
+        ),
+        Tool(
+            "NegativeResponse",
+            lambda t: negative_prompt_tool(t, session_id),
+            "Negative feelings",
+        ),
+        Tool(
+            "AcademicHelper",
+            lambda t: student_marks_tool(t, session_id),
+            "Scores & results",
+        ),
+        Tool(
+            "Safety",
+            lambda t: self_harm_safety_tool(t, session_id),
+            "Self-harm emergency",
+        ),
+        Tool(
+            "ClarifyIntent",
+            lambda t: clarification_question(t, session_id),
+            "Ask if message refers to self",
+        ),
     ]
 
     agent = initialize_agent(
-        tools, llm, memory=memory,
+        tools,
+        llm,
+        memory=memory,
         agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
         verbose=False,
     )
@@ -263,6 +290,7 @@ def get_agent(session_id: str):
 # ---------------------------
 # Semantic Intent Classifier
 # ---------------------------
+
 
 def classify_intent(text: str) -> str:
     """
@@ -293,6 +321,7 @@ academic | positive | negative | safety | generic | unclear
 # Name Handling
 # ---------------------------
 
+
 def extract_name(text: str) -> str:
     """
     Extract user's name if they introduce themselves.
@@ -312,13 +341,16 @@ def set_name(name: str, session_id: str = "default") -> str:
     clean = extract_name(name)
     session["name"] = clean
 
-    get_memory(session_id).save_context({"input": name}, {"output": f"Stored name: {clean}."})
+    get_memory(session_id).save_context(
+        {"input": name}, {"output": f"Stored name: {clean}."}
+    )
     return f"Nice to meet you, {clean}. What should we do next?"
 
 
 # ---------------------------
 # Main Chat Router
 # ---------------------------
+
 
 def chat(message: str, session_id: str = "default") -> str:
     """
